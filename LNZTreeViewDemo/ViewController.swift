@@ -38,9 +38,9 @@ class Node: NSObject, TreeNodeProtocol {
 }
 
 class ViewController: UIViewController {
-    
+    @IBOutlet weak var searchBar : UISearchBar!
     @IBOutlet weak var treeView: LNZTreeView!
-    var root = [Node]()
+    var root = Node(withIdentifier: "root")
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -51,6 +51,8 @@ class ViewController: UIViewController {
         
         generateRandomNodes()
         treeView.resetTree()
+        
+        searchBar.delegate = self
     }
     
     func generateRandomNodes() {
@@ -79,7 +81,7 @@ class ViewController: UIViewController {
             lastLevelNodes = thisDepthLevelNodes
         }
         
-        self.root = root
+        self.root.children = root
     }
     
     func generateNodes(_ numberOfNodes: Int, depthLevel: Int) -> [Node] {
@@ -103,7 +105,7 @@ extension ViewController: LNZTreeViewDataSource {
     
     func treeView(_ treeView: LNZTreeView, numberOfRowsInSection section: Int, forParentNode parentNode: TreeNodeProtocol?) -> Int {
         guard let parent = parentNode as? Node else {
-            return root.count
+            return root.children!.count
         }
         
         return parent.children?.count ?? 0
@@ -111,11 +113,13 @@ extension ViewController: LNZTreeViewDataSource {
     
     func treeView(_ treeView: LNZTreeView, nodeForRowAt indexPath: IndexPath, forParentNode parentNode: TreeNodeProtocol?) -> TreeNodeProtocol {
         guard let parent = parentNode as? Node else {
-            return root[indexPath.row]
+            return root.children![indexPath.row]
         }
 
         return parent.children![indexPath.row]
     }
+    
+    func
     
     func treeView(_ treeView: LNZTreeView, cellForRowAt indexPath: IndexPath, forParentNode parentNode: TreeNodeProtocol?, isExpanded: Bool) -> UITableViewCell {
         
@@ -123,7 +127,7 @@ extension ViewController: LNZTreeViewDataSource {
         if let parent = parentNode as? Node {
             node = parent.children![indexPath.row]
         } else {
-            node = root[indexPath.row]
+            node = root.children![indexPath.row]
         }
         
         let cell = treeView.dequeueReusableCell(withIdentifier: "cell", for: node, inSection: indexPath.section)
@@ -147,5 +151,15 @@ extension ViewController: LNZTreeViewDataSource {
 extension ViewController: LNZTreeViewDelegate {
     func treeView(_ treeView: LNZTreeView, heightForNodeAt indexPath: IndexPath, forParentNode parentNode: TreeNodeProtocol?) -> CGFloat {
         return 60
+    }
+}
+
+extension ViewController : UISearchBarDelegate {
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        print( searchText)
+    }
+    
+    func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
+        
     }
 }
