@@ -41,7 +41,8 @@ class ViewController: UIViewController {
     @IBOutlet weak var searchBar : UISearchBar!
     @IBOutlet weak var treeView: LNZTreeView!
     var root = Node(withIdentifier: "root")
-    
+    var searchKeyWord :String?
+
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -96,6 +97,35 @@ class ViewController: UIViewController {
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
     }
+    
+    func dfs ( key : String , root : Node? ) -> Bool {
+        if let des = root?.identifier , des.lowercased().contains(key.lowercased()) {
+            return true
+        }
+        var isContains = false
+        if let childs =  root?.children {
+            for node in childs {
+                isContains = (isContains || dfs ( key:key , root: node ))
+            }
+        }
+        return isContains
+    }
+    
+    func expandAllTree(root : Node?, expand: Bool = true) {
+        if root != nil {
+            if expand {
+                self.treeView.expand(node: root!, inSection: 0)
+            }
+            else {
+                self.treeView.collapse(node: root!, inSection: 0)
+            }
+            if let childs =  root?.children {
+                for node in childs {
+                    expandAllTree(root: node)
+                }
+            }
+        }
+    }
 }
 
 extension ViewController: LNZTreeViewDataSource {
@@ -118,8 +148,6 @@ extension ViewController: LNZTreeViewDataSource {
 
         return parent.children![indexPath.row]
     }
-    
-    func
     
     func treeView(_ treeView: LNZTreeView, cellForRowAt indexPath: IndexPath, forParentNode parentNode: TreeNodeProtocol?, isExpanded: Bool) -> UITableViewCell {
         
@@ -146,10 +174,30 @@ extension ViewController: LNZTreeViewDataSource {
         
         return cell
     }
+    func searchTreeFromNodeWith(searchTxt:String) {
+        
+        self.searchKeyWord = searchTxt
+        self.treeView.resetTree()
+        self.expandAllTree(root: self.root)
+        
+    }
 }
 
 extension ViewController: LNZTreeViewDelegate {
     func treeView(_ treeView: LNZTreeView, heightForNodeAt indexPath: IndexPath, forParentNode parentNode: TreeNodeProtocol?) -> CGFloat {
+        if let sk = self.searchKeyWord {
+            
+            if let pNodeChildren = (parentNode as? Node)?.children , pNodeChildren.count > indexPath.row {
+                
+                let currNode = pNodeChildren[indexPath.row]
+                if (dfs(key: sk, root: currNode)) {
+                    return 60
+                }
+                else {
+                    return 0
+                }
+            }
+        }
         return 60
     }
 }
@@ -157,6 +205,13 @@ extension ViewController: LNZTreeViewDelegate {
 extension ViewController : UISearchBarDelegate {
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
         print( searchText)
+        if searchText.count > 0 {
+            self.searchTreeFromNodeWith(searchTxt: searchText)
+        }
+        else {
+            self.searchKeyWord = nil
+            self.treeView.resetTree()
+        }
     }
     
     func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
